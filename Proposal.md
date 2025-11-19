@@ -43,7 +43,7 @@ Dog-breed recognition is challenging due to subtle visual differences. Combining
 ## **4. System Architecture Overview**
 
 The pipeline consists of two core modules:
-
+Image → ResNet Classifier → Breed Label → Text-to-Image Generator → New Dog Images
 
 Both modules use **transfer learning** for efficient and high-quality results.
 
@@ -114,7 +114,7 @@ We will use pretrained Stable Diffusion models via **HuggingFace Diffusers**.
 
 
 **User-controlled prompts:**
--"A realistic photo of a Shiba Inu puppy playing in the grass."
+"A realistic photo of a Shiba Inu puppy playing in the grass."
 
 ---
 
