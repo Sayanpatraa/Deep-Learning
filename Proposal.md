@@ -155,17 +155,17 @@ This helps especially underrepresented breeds.
     └──────────────┬─────────────┘
                    ▼
          ┌──────────────────────┐
-         │ ResNet Classifier     │
-         │   (Transfer Learning) │
+         │ ResNet Classifier    │
+         │   (Transfer Learning)│
          └──────────┬───────────┘
                     ▼
     ┌────────────────────────────────────┐
     │ Text-to-Image Generator (SD/SDXL)  │
-    └──────────────────┬─────────────────┘
-                       ▼
-         ┌──────────────────────────────┐
-         │  Generated Dog Images (HD)    │
-         └──────────────────────────────┘
+    └───────────────┬────────────────────┘
+                    ▼
+      ┌──────────────────────────────┐
+      │  Generated Dog Images (HD)   │
+      └──────────────────────────────┘
 
 ---
 
