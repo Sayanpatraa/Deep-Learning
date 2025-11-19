@@ -149,11 +149,11 @@ This helps especially underrepresented breeds.
 
 ## **8. System Architecture Diagram**
 
-  ┌────────────────────────────┐
-  │        User Input          │
-  │  (Image or Breed Prompt)   │
-  └──────────────┬─────────────┘
-                 ▼
+    ┌────────────────────────────┐
+    │        User Input          │
+    │  (Image or Breed Prompt)   │
+    └──────────────┬─────────────┘
+                   ▼
       ┌──────────────────────┐
       │ ResNet Classifier    │
       │   (Transfer Learning)│
