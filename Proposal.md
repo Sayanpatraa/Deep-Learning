@@ -149,23 +149,23 @@ This helps especially underrepresented breeds.
 
 ## **8. System Architecture Diagram**
 
-    ┌────────────────────────────┐
-    │        User Input          │
-    │  (Image or Breed Prompt)   │
-    └──────────────┬─────────────┘
-                   ▼
-         ┌──────────────────────┐
-         │ ResNet Classifier    │
-         │   (Transfer Learning)│
-         └──────────┬───────────┘
-                    ▼
-    ┌────────────────────────────────────┐
-    │ Text-to-Image Generator (SD/SDXL)  │
-    └───────────────┬────────────────────┘
-                    ▼
-      ┌──────────────────────────────┐
-      │  Generated Dog Images (HD)   │
-      └──────────────────────────────┘
+  ┌────────────────────────────┐
+  │        User Input          │
+  │  (Image or Breed Prompt)   │
+  └──────────────┬─────────────┘
+                 ▼
+      ┌──────────────────────┐
+      │ ResNet Classifier    │
+      │   (Transfer Learning)│
+      └──────────┬───────────┘
+                 ▼
+  ┌────────────────────────────────────┐
+  │ Text-to-Image Generator (SD/SDXL)  │
+  └───────────────┬────────────────────┘
+                  ▼
+    ┌──────────────────────────────┐
+    │  Generated Dog Images (HD)   │
+    └──────────────────────────────┘
 
 ---
 
