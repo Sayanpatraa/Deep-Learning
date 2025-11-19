@@ -1,4 +1,4 @@
-# **Dog Breed Identification + Generative Dog Image Synthesis**
+# **CanisNet: Dog Breed Recognition & Image Generation System**
 ### Authors: Adam Stuhltrager | Junhua Deng | Sameer Batra | Sayan Patra
 
 ---
