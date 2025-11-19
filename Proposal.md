@@ -36,7 +36,7 @@ Dog-breed recognition is challenging due to subtle visual differences. Combining
 - **10,222 labeled images**
 - **120 dog breeds**
 - Fine-grained, complex, and highly diverse images  
-- Will create an **80/20 train-validation split** (stratified)
+- Will create an **80/20 train-validation split** (ps)
 
 ---
 
