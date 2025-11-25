@@ -310,7 +310,7 @@ def train_resnet_pipeline():
 
 
 # ============================================================
-# 4. INFERENCE: IMAGE → BREED
+# 4. INFERENCE: IMAGE to  BREED
 # ============================================================
 
 class DogBreedPredictor:
@@ -423,7 +423,7 @@ class CanisNet:
 
 
 # ============================================================
-# 7. STREAMLIT FRONTEND (OPTIONAL)
+# 7. STREAMLIT FRONTEND (WORKING ON)
 # ============================================================
 
 """
