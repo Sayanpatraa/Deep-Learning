@@ -11,8 +11,8 @@ from torchvision.models import resnet50
 
 # Hugging Face repo & filenames
 HF_REPO_ID = "djhua0103/dog-breed-resnet50"
-WEIGHT_FILE = "resnet50_dog_best.pth"   # 和训练脚本保存的一致
-LABEL_FILE = "id2breed.json"           # 你上传在 HF 里的映射文件
+WEIGHT_FILE = "resnet50_dog_best.pth"
+LABEL_FILE = "id2breed.json"
 
 
 class DogClassifier(nn.Module):
@@ -79,14 +79,13 @@ class DogClassifier(nn.Module):
         )
         ckpt = torch.load(ckpt_path, map_location=device)
 
-        # 4) extract state_dict (根据你的训练脚本，这里是 "model_state")
+        # 4) extract state_dict
         if isinstance(ckpt, dict) and "model_state" in ckpt:
             state_dict = ckpt["model_state"]
         else:
-            # 兜底：如果以后你直接保存 state_dict，也不会挂掉
             state_dict = ckpt
 
-        # 5) strict=True，必须完全匹配，不再打印一堆 warning
+        # 5) strict=True，
         clf.model.load_state_dict(state_dict, strict=True)
 
         clf.model.to(device)
