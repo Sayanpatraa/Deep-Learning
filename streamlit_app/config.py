@@ -19,22 +19,22 @@ LORA_STYLES = {
         "description": "Black and white manga style with speed lines"
     },
     "Anime": {
-        "repo": "Linaqruf/animagine-xl-2.0",
-        "weight_name": None,
+        "repo": "ntc-ai/SDXL-LoRA-slider.anime",
+        "weight_name": "anime.safetensors",
+        "scale": 1.5,
+        "description": "Anime style slider effect"
+    },
+    "Pastel Anime": {
+        "repo": "Linaqruf/pastel-anime-xl-lora",
+        "weight_name": "pastel-anime-xl.safetensors",
         "scale": 0.8,
-        "description": "Colorful anime illustration style"
+        "description": "Soft pastel anime illustration style"
     },
     "Pixel Art": {
         "repo": "nerijs/pixel-art-xl",
         "weight_name": None,
         "scale": 0.9,
         "description": "Retro pixel art style"
-    },
-    "Watercolor": {
-        "repo": "ostris/watercolor_style_lora_sdxl",
-        "weight_name": None,
-        "scale": 0.8,
-        "description": "Soft watercolor painting style"
     },
 }
 
@@ -53,17 +53,17 @@ PROMPT_TEMPLATES = {
     "Anime": (
         "Beautiful illustration of a {breed} dog, anime style, "
         "vibrant colors, detailed fur, expressive eyes, "
-        "studio ghibli inspired, soft lighting, peaceful scene"
+        "soft lighting, peaceful scene, high quality"
+    ),
+    "Pastel Anime": (
+        "Cute {breed} dog, pastel colors, soft anime style, "
+        "gentle lighting, dreamy atmosphere, detailed fur, "
+        "masterpiece, best quality"
     ),
     "Pixel Art": (
         "Pixel art of a {breed} dog, 16-bit style, "
         "retro gaming aesthetic, clean pixels, vibrant colors, "
         "side view sprite, detailed shading"
-    ),
-    "Watercolor": (
-        "Watercolor painting of a {breed} dog, soft brush strokes, "
-        "pastel colors, artistic, flowing paint, wet on wet technique, "
-        "beautiful illustration, gallery quality"
     ),
 }
 
@@ -88,8 +88,8 @@ NEGATIVE_PROMPTS = {
         "edge highlight, jpeg artifacts, bad anatomy, text, logo, watermark"
     ),
     "Anime": DEFAULT_NEGATIVE_PROMPT,
+    "Pastel Anime": DEFAULT_NEGATIVE_PROMPT,
     "Pixel Art": DEFAULT_NEGATIVE_PROMPT + ", anti-aliasing, smooth gradients",
-    "Watercolor": DEFAULT_NEGATIVE_PROMPT + ", digital art, 3d render, photograph",
 }
 
 # Generation defaults
