@@ -10,7 +10,7 @@ class DogDiffusionXLGenerator:
     def __init__(
         self,
         base_model: str = "stabilityai/stable-diffusion-xl-base-1.0",
-        lora_repo: str = "djhua0103/DogDiffusion",
+        lora_repo: str = "artificialguybr/LineAniRedmond-LinearMangaSDXL-V2",
         lora_weight_name: Optional[str] = None,
         device: Optional[str] = None,
         lora_scale: float = 0.9,
@@ -41,13 +41,14 @@ class DogDiffusionXLGenerator:
             variant="fp16" if device == "cuda" else None,
             use_safetensors=True,
         ).to(device)
-
+        '''
         if device == "cuda":
             try:
                 self.pipe.enable_xformers_memory_efficient_attention()
                 print("[INFO] xFormers enabled")
             except Exception as e:
                 print(f"[WARN] xFormers not enabled: {e}")
+        '''
 
         # ---- LoRA (from Hugging Face) ----
         print("[INFO] Loading LoRA weights from Hugging Face...")
@@ -64,10 +65,15 @@ class DogDiffusionXLGenerator:
     def generate(
         self,
         prompt: str,
-        negative_prompt: str = "blurry, low quality, distorted, extra limbs, extra heads",
-        height: int = 768,
-        width: int = 768,
-        num_inference_steps: int = 30,
+        negative_prompt: str = "extra tail, duplicate tail, second tail, tail duplication, tail artifact,"
+                               "blurry, low quality, distorted, extra limbs, extra legs, extra tails, duplicate tail, extra heads, "
+                               "wrong dog anatomy, elongated body, tiny head, giant head, short limbs, missing legs, mutated paws, "
+                               "fused anatomy, deformed pose, unnatural posture, "
+                               "color, colorful, pastel colors, 3d, cgi, photorealistic, painting, edge highlight, "
+                               "jpeg artifacts, bad anatomy, text, logo, watermark",
+        height: int = 720,
+        width: int = 1080,
+        num_inference_steps: int = 50,
         guidance_scale: float = 5.0,
         seed: Optional[int] = None,
     ) -> Image.Image:
@@ -95,35 +101,40 @@ class DogDiffusionXLGenerator:
 
 if __name__ == "__main__":
     import datetime
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--breed", type=str, required=True,
+                        help="Dog breed to be inserted into the prompt")
+    args = parser.parse_args()
 
     current_dir = os.path.dirname(__file__)
     print(f"[INFO] Current dir: {current_dir}")
 
-    # Change name of safetensors if needed
-    # Ex: lora_weight_name="DogDiffusionXL.safetensors"
     generator = DogDiffusionXLGenerator(
         base_model="stabilityai/stable-diffusion-xl-base-1.0",
-        lora_repo="djhua0103/DogDiffusion",
-        lora_weight_name=None,  # or "DogDiffusionXL.safetensors"
+        lora_repo="artificialguybr/LineAniRedmond-LinearMangaSDXL-V2",
+        lora_weight_name=None,
         lora_scale=0.9,
     )
 
     # prompt
     prompt = (
-        "A cream-colored Labrador Retriever is swimming in the water. "
-        "4k, ultra high resolution, natural lighting"
+        f"Black and white side view of a {args.breed} dog sprinting, accurate canine anatomy, single visible tail, "
+         "one tail only, proper proportions, full body in frame, natural limb spacing, dynamic running pose, "
+         "consistent perspective, shonen jump manga style, screentone shading, inked lineart, high contrast, "
+         "speed lines, impact frame, dramatic action"
     )
 
     img = generator.generate(
         prompt=prompt,
-        height=768,
-        width=768,
+        height=720,
+        width=1080,
         num_inference_steps=50,
         guidance_scale=5.0,
         seed=39,
     )
 
-    # use timestamp as image name
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     file_name = f"dogdiffusionxl_{timestamp}.png"
 
@@ -135,3 +146,4 @@ if __name__ == "__main__":
     img.save(save_path)
 
     print(f"[INFO] Saved to: {save_path}")
+

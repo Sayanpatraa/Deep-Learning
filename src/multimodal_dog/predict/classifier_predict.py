@@ -6,7 +6,7 @@ model = DogClassifier.from_hf()
 print("Model loaded.")
 
 # 2. load local image
-img = Image.open("border_collie.jpg").convert("RGB")
+img = Image.open("irish2.jpg").convert("RGB")
 breed, conf = model.predict(img)
 
 print("Predicted breed:", breed)
