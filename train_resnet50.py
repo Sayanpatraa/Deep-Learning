@@ -34,9 +34,9 @@ LABELS_CSV   = "labels.csv"
 TRAIN_DIR    = "train"
 OUTPUT_DIR   = "checkpoints"
 
-EPOCHS       = 15
+EPOCHS       = 100
 BATCH_SIZE   = 128
-LR           = 1e-4
+LR           = 1e-5
 WEIGHT_DECAY = 1e-4
 VAL_RATIO    = 0.2
 NUM_WORKERS  = 4
@@ -168,11 +168,12 @@ def main():
     # Transforms
     train_tf = T.Compose([
         T.Resize((256, 256)),
-        T.RandomResizedCrop(224),
+        T.RandomResizedCrop(224, scale=(0.8, 1.0)),
         T.RandomHorizontalFlip(),
+        T.RandomRotation(15),  # NEW
+        T.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),  # NEW
         T.ToTensor(),
-        T.Normalize([0.485, 0.456, 0.406],
-                    [0.229, 0.224, 0.225]),
+        T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
     ])
 
     val_tf = T.Compose([
@@ -188,7 +189,7 @@ def main():
     val_size = int(len(full_dataset) * VAL_RATIO)
     train_size = len(full_dataset) - val_size
     train_ds, val_ds = random_split(full_dataset, [train_size, val_size])
-    val_ds.dataset.transform = val_tf
+    # val_ds.dataset.transform = val_tf
 
     print(f"Train: {train_size}, Val: {val_size}")
 
@@ -241,7 +242,6 @@ def main():
             print(f"\n⛔ Early stopping triggered after {epoch} epochs")
             print(f"Best validation accuracy: {best_val_acc:.4f}")
             break
-
 
 
 # ==============================
