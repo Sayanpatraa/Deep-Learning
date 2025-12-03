@@ -35,7 +35,7 @@ TRAIN_DIR    = "train"
 OUTPUT_DIR   = "checkpoints"
 
 EPOCHS       = 15
-BATCH_SIZE   = 32
+BATCH_SIZE   = 128
 LR           = 1e-4
 WEIGHT_DECAY = 1e-4
 VAL_RATIO    = 0.2
