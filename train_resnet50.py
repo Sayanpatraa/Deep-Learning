@@ -42,6 +42,11 @@ VAL_RATIO    = 0.2
 NUM_WORKERS  = 4
 USE_CPU_ONLY = False
 
+EARLY_STOPPING_PATIENCE = 5  
+EARLY_STOPPING_MIN_DELTA = 0.0001  
+
+patience_counter = 0
+best_val_acc = 0.0
 
 # ==============================
 # 1. Dataset
@@ -215,8 +220,10 @@ def main():
         print(f"Train Loss: {train_loss:.4f}")
         print(f"Val   Loss: {val_loss:.4f} | Val Acc: {val_acc:.4f}")
 
-        if val_acc > best_val_acc:
+        # Check for improvement
+        if val_acc > best_val_acc + EARLY_STOPPING_MIN_DELTA:
             best_val_acc = val_acc
+            patience_counter = 0  # Reset counter
             torch.save({
                 "model_state": model.state_dict(),
                 "breed2idx": breed2idx,
@@ -225,10 +232,16 @@ def main():
                 "epoch": epoch,
             }, best_ckpt)
             print(f"🔥 New best model saved to {best_ckpt} (acc={best_val_acc:.4f})")
+        else:
+            patience_counter += 1
+            print(f"⏳ No improvement. Patience: {patience_counter}/{EARLY_STOPPING_PATIENCE}")
+        
+        # Early stopping check
+        if patience_counter >= EARLY_STOPPING_PATIENCE:
+            print(f"\n⛔ Early stopping triggered after {epoch} epochs")
+            print(f"Best validation accuracy: {best_val_acc:.4f}")
+            break
 
-    print("\nTraining completed!")
-    print(f"Best accuracy: {best_val_acc:.4f}")
-    print(f"Best model saved at: {best_ckpt}")
 
 
 # ==============================
