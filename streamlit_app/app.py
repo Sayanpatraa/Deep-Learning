@@ -239,9 +239,7 @@ def main():
                     st.markdown("**Other possibilities:**")
                     for breed, conf in results[1:]:
                         st.markdown(f"- {breed.replace('_', ' ').title()}: {conf:.1%}")
-                
-                st.markdown("---")
-                st.info("💡 Click **'Use in Generator →'** in the sidebar to generate art of this breed.")
+
             else:
                 st.markdown("""
                 <div style="border: 2px dashed #ccc; border-radius: 10px; padding: 80px 20px; text-align: center; color: #888;">
