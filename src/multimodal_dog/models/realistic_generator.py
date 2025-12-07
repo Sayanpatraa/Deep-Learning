@@ -2240,7 +2240,7 @@ class RealLifeDogSDXL:
             except Exception as e:
                 print(f"[WARN] Could not load LoRA into refiner: {e}")
 
-    def build_prompt(self, breed: str, environment: str) -> str:
+    def build_prompt(self, breed: str) -> str:
         """
         Builds a photoreal + anatomy-aware prompt.
         - Enforces full-body side profile so hind legs are clearly visible
@@ -2257,63 +2257,91 @@ class RealLifeDogSDXL:
         return (
             f"{PHOTO_PRIOR}. "
             f"Real-life {breed} dog, {anatomy_text}. "
-            f"Scene: {environment}. "
             f"{pose_and_camera}. "
             "High realism, natural imperfections, no stylization."
         )
 
     def generate(
-        self,
-        breed: str = "siberian husky",
-        environment: str = "a snowy forest",
-        seed: int = 1234,
-        steps_base: int = 28,
-        steps_refiner: int = 20,
-        scale: float = 5.5,
-        width: int = 1024,
-        height: int = 1024,
-    ) -> Image.Image:
-        width, height = snap(width), snap(height)
-        prompt = self.build_prompt(breed, environment)
-        print("[PROMPT]")
-        print(prompt)
+    self,
+    breed: str = "siberian husky",
+    seed: int = None,
+    steps_base: int = 28,
+    steps_refiner: int = 20,
+    scale: float = 5.5,
+    width: int = 1024,
+    height: int = 1024,
+) -> Image.Image:
 
-        g = torch.Generator(self.device).manual_seed(seed)
-        total_steps = steps_base + steps_refiner
-        split = steps_base / float(total_steps)
+    width, height = snap(width), snap(height)
+    prompt = self.build_prompt(breed)
+    print("[PROMPT]")
+    print(prompt)
 
-        # ----------------- BASE (latent up to denoising_end) -----------------
-        base_out = self.base(
-            prompt=prompt,
-            negative_prompt=DEFAULT_NEG,
-            height=height,
-            width=width,
-            num_inference_steps=total_steps,
-            guidance_scale=scale,
-            generator=g,
-            denoising_end=split,
-            output_type="latent",
-        )
-        latents = base_out.images
+    # -------- RANDOM SEED --------
+    if seed is None:
+        seed = torch.randint(0, 2**31 - 1, (1,)).item()
+    print(f"[SEED] {seed}")
+    g = torch.Generator(self.device).manual_seed(seed)
 
-        # ----------------- REFINER (from denoising_start) --------------------
-        refined = self.refiner(
-            prompt=prompt,
-            negative_prompt=DEFAULT_NEG,
-            image=latents,
-            num_inference_steps=total_steps,
-            guidance_scale=scale,
-            generator=g,
-            denoising_start=split,
-        )
-        img = refined.images[0]
+    # -------- TIMESTEP LOGIC --------
+    total_steps = steps_base + steps_refiner
+    split = steps_base / float(total_steps)
 
-        # Photographic realism passes
-        img = tone(img)
-        img = microfur(img)
-        img = real_sensor_noise(img)
-        return img
+    # Reset scheduler
+    self.base.scheduler.set_timesteps(total_steps)
 
+    # Universal sigma safety
+    safe_max = len(self.base.scheduler.sigmas) - 1
+    if total_steps > safe_max:
+        print(f"[WARN] Clamping steps {total_steps} → {safe_max}")
+        total_steps = safe_max
+        self.base.scheduler.set_timesteps(total_steps)
+
+    print(f"[DEBUG] Using {len(self.base.scheduler.sigmas)} sigmas, {total_steps} steps.")
+
+    # -------- LONG PROMPT CHUNKING --------
+    prompt_embeds, negative_embeds = self.base.encode_prompt(
+        prompt=prompt,
+        negative_prompt=DEFAULT_NEG,
+        device=self.device,
+        do_classifier_free_guidance=True,
+        max_length=200
+    )
+
+    # -------- BASE PASS --------
+    base_out = self.base(
+        prompt_embeds=prompt_embeds,
+        negative_prompt_embeds=negative_embeds,
+        height=height,
+        width=width,
+        num_inference_steps=total_steps,
+        guidance_scale=scale,
+        generator=g,
+        denoising_end=split,
+        output_type="latent",
+    )
+
+    latents = base_out.images
+
+    # -------- REFINER PASS --------
+    refined = self.refiner(
+        prompt=prompt,                     
+        negative_prompt=DEFAULT_NEG,
+        image=latents,
+        num_inference_steps=total_steps,
+        guidance_scale=scale,
+        generator=g,
+        denoising_start=split,
+    )
+
+    img = refined.images[0]
+
+    # -------- REALISM PASSES --------
+    img = tone(img)
+    img = microfur(img)
+    img = real_sensor_noise(img)
+
+    return img
 
 
 def main():
@@ -2321,7 +2349,6 @@ def main():
 
     parser = argparse.ArgumentParser(description="Real-Life SDXL Dog Generator (Hind-Leg Corrected)")
     parser.add_argument("--breed", default="siberian husky", help="Dog breed (string)")
-    parser.add_argument("--env", default="a forest in soft daylight", help="Textual environment description")
     parser.add_argument("--lora", default=None, help="Optional LoRA path for extra realism")
     parser.add_argument("--out", default="./output", help="Output directory")
     parser.add_argument("--seed", type=int, default=1234, help="Random seed")
@@ -2332,7 +2359,6 @@ def main():
     gen = RealLifeDogSDXL(lora_path=args.lora)
     img = gen.generate(
         breed=args.breed,
-        environment=args.env,
         seed=args.seed,
     )
 
