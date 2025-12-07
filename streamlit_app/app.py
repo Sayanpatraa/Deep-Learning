@@ -282,29 +282,41 @@ def main():
             
             use_realistic = is_realistic_style(selected_style)
             
+            # Advanced settings - define defaults first
+            if use_realistic:
+                default_height = 1024
+                default_width = 1024
+            else:
+                default_height = DEFAULT_HEIGHT
+                default_width = DEFAULT_WIDTH
+            
             # Advanced settings
-            with st.expander("⚙️ Advanced Settings"):
+            with st.expander("⚙️ Advanced Settings", expanded=True):
                 if use_realistic:
+                    st.markdown("**Realistic Generation Settings**")
                     col_a, col_b = st.columns(2)
                     with col_a:
-                        height = st.number_input("Height", value=1024, step=64, min_value=512, max_value=1024)
-                        steps_base = st.slider("Base Steps", 15, 50, 28)
+                        height = st.number_input("Height", value=default_height, step=64, min_value=512, max_value=1024, key="real_height")
+                        steps_base = st.slider("Base Steps", 15, 50, 28, key="steps_base")
                     with col_b:
-                        width = st.number_input("Width", value=1024, step=64, min_value=512, max_value=1280)
-                        steps_refiner = st.slider("Refiner Steps", 10, 40, 20)
-                    guidance = st.slider("Guidance Scale", 1.0, 10.0, 5.5, 0.5)
+                        width = st.number_input("Width", value=default_width, step=64, min_value=512, max_value=1280, key="real_width")
+                        steps_refiner = st.slider("Refiner Steps", 10, 40, 20, key="steps_refiner")
+                    guidance = st.slider("Guidance Scale", 1.0, 10.0, 5.5, 0.5, key="real_guidance")
+                    steps = None  # Not used for realistic
                 else:
+                    st.markdown("**Stylized Generation Settings**")
                     col_a, col_b = st.columns(2)
                     with col_a:
-                        height = st.number_input("Height", value=DEFAULT_HEIGHT, step=64, min_value=512, max_value=1024)
-                        steps = st.slider("Inference Steps", 20, 100, DEFAULT_STEPS)
+                        height = st.number_input("Height", value=default_height, step=64, min_value=512, max_value=1024, key="style_height")
+                        steps = st.slider("Inference Steps", 20, 100, DEFAULT_STEPS, key="style_steps")
                     with col_b:
-                        width = st.number_input("Width", value=DEFAULT_WIDTH, step=64, min_value=512, max_value=1280)
-                        guidance = st.slider("Guidance Scale", 1.0, 15.0, DEFAULT_GUIDANCE, 0.5)
-                    steps_base = steps_refiner = None
+                        width = st.number_input("Width", value=default_width, step=64, min_value=512, max_value=1280, key="style_width")
+                        guidance = st.slider("Guidance Scale", 1.0, 15.0, DEFAULT_GUIDANCE, 0.5, key="style_guidance")
+                    steps_base = 28  # Default values for realistic (not used but defined)
+                    steps_refiner = 20
                 
-                use_seed = st.checkbox("Use fixed seed")
-                seed = st.number_input("Seed", value=1234, min_value=0) if use_seed else None
+                use_seed = st.checkbox("Use fixed seed", key="use_seed")
+                seed = st.number_input("Seed", value=1234, min_value=0, key="seed_val") if use_seed else None
             
             # Generate button
             generate_btn = st.button(
@@ -317,7 +329,14 @@ def main():
         with col2:
             if generate_btn and selected_breed:
                 progress = st.empty()
-                progress.markdown(f"**Generating {selected_breed} in {selected_style} style...**")
+                
+                if use_realistic:
+                    progress.markdown(f"**Generating {selected_breed} in {selected_style} style...**\n\n"
+                                     f"Base steps: {steps_base}, Refiner steps: {steps_refiner}, "
+                                     f"Size: {width}x{height}")
+                else:
+                    progress.markdown(f"**Generating {selected_breed} in {selected_style} style...**\n\n"
+                                     f"Steps: {steps}, Size: {width}x{height}")
                 
                 try:
                     with st.spinner("Loading model..."):
@@ -328,6 +347,7 @@ def main():
                     
                     with st.spinner("Generating image..."):
                         if use_realistic:
+                            print(f"[APP] Calling generate_realistic with steps_base={steps_base}, steps_refiner={steps_refiner}")
                             image = generate_realistic(
                                 generator=generator,
                                 breed=selected_breed,
