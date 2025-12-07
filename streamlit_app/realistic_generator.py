@@ -2267,7 +2267,7 @@ class RealLifeDogSDXL:
             "High realism, natural imperfections, no stylization."
         )
 
-     def generate(
+    def generate(
         self,
         breed: str = "siberian husky",
         seed: int = None,
