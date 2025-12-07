@@ -9,7 +9,7 @@ import io
 
 from classifier import DogClassifier
 from generator import DogGenerator
-from realistic_generator import RealLifeDogSDXL
+from realistic_generator import RealLifeDogSDXL, NEG, tone, microfur, real_sensor_noise, snap
 from config import (
     DOG_BREEDS,
     LORA_STYLES,
@@ -94,6 +94,73 @@ def is_realistic_style(style_name: str) -> bool:
     """Check if the selected style uses the realistic pipeline."""
     style_config = LORA_STYLES.get(style_name, {})
     return style_config.get("use_realistic_pipeline", False)
+
+
+def generate_realistic_image(
+    generator: RealLifeDogSDXL,
+    breed: str,
+    seed: int = None,
+    steps_base: int = 28,
+    steps_refiner: int = 20,
+    scale: float = 5.5,
+    width: int = 1024,
+    height: int = 1024,
+) -> Image.Image:
+    """
+    Generate realistic dog image using prompt strings directly (bypasses encode_prompt issues).
+    """
+    width, height = snap(width), snap(height)
+    prompt = generator.build_prompt(breed)
+    print("[PROMPT]")
+    print(prompt)
+
+    # Random seed if not provided
+    if seed is None:
+        seed = torch.randint(0, 2**31 - 1, (1,)).item()
+    print(f"[SEED] {seed}")
+    
+    g = torch.Generator(generator.device).manual_seed(seed)
+
+    # Timestep logic
+    total_steps = steps_base + steps_refiner
+    split = steps_base / float(total_steps)
+
+    print(f"[DEBUG] total_steps={total_steps}, split={split}")
+
+    # -------- BASE PASS (using prompt string directly) --------
+    base_out = generator.base(
+        prompt=prompt,
+        negative_prompt=NEG,
+        height=height,
+        width=width,
+        num_inference_steps=total_steps,
+        guidance_scale=scale,
+        generator=g,
+        denoising_end=split,
+        output_type="latent",
+    )
+
+    latents = base_out.images
+
+    # -------- REFINER PASS --------
+    refined = generator.refiner(
+        prompt=prompt,
+        negative_prompt=NEG,
+        image=latents,
+        num_inference_steps=total_steps,
+        guidance_scale=scale,
+        generator=g,
+        denoising_start=split,
+    )
+
+    img = refined.images[0]
+
+    # -------- REALISM PASSES --------
+    img = tone(img)
+    img = microfur(img)
+    img = real_sensor_noise(img)
+
+    return img
 
 
 # ============ Main App ============
@@ -314,8 +381,9 @@ def main():
                 with st.spinner("Generating..."):
                     try:
                         if use_realistic:
-                            # Use realistic generator
-                            generated_image = generator.generate(
+                            # Use realistic generator with direct prompt (bypasses encode_prompt)
+                            generated_image = generate_realistic_image(
+                                generator=generator,
                                 breed=selected_breed,
                                 seed=seed,
                                 steps_base=steps_base,
