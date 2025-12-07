@@ -99,6 +99,11 @@ def generate_realistic(
     """
     Generate realistic dog image.
     Uses prompt strings directly to avoid encode_prompt compatibility issues.
+    
+    The base+refiner ensemble works by:
+    - Both use the SAME total_steps
+    - denoising_end/start controls which portion each handles
+    - Example: total=48, split=0.58 -> base does ~28 steps, refiner does ~20 steps
     """
     width, height = snap(width), snap(height)
     prompt = generator.build_prompt(breed)
@@ -112,8 +117,12 @@ def generate_realistic(
     
     g = torch.Generator(generator.device).manual_seed(seed)
     
-    # Use high_noise_frac for base/refiner split (standard approach)
-    high_noise_frac = 0.8
+    # Calculate total steps and split ratio
+    total_steps = steps_base + steps_refiner
+    split = steps_base / total_steps  # e.g., 28/(28+20) = 0.583
+    
+    print(f"[INFO] Total steps: {total_steps}, Split: {split:.3f}")
+    print(f"[INFO] Base will do ~{int(total_steps * split)} steps, Refiner will do ~{int(total_steps * (1-split))} steps")
     
     # Base pass - use prompt string directly
     print("[INFO] Running base model...")
@@ -122,16 +131,16 @@ def generate_realistic(
         negative_prompt=NEG,
         height=height,
         width=width,
-        num_inference_steps=steps_base,
+        num_inference_steps=total_steps,
         guidance_scale=scale,
         generator=g,
-        denoising_end=high_noise_frac,
+        denoising_end=split,
         output_type="latent",
     )
     
     latents = base_out.images
     
-    # Refiner pass
+    # Refiner pass - must use same total_steps
     print("[INFO] Running refiner...")
     g_refiner = torch.Generator(generator.device).manual_seed(seed)
     
@@ -139,10 +148,10 @@ def generate_realistic(
         prompt=prompt,
         negative_prompt=NEG,
         image=latents,
-        num_inference_steps=steps_refiner,
+        num_inference_steps=total_steps,
         guidance_scale=scale,
         generator=g_refiner,
-        denoising_start=high_noise_frac,
+        denoising_start=split,
     )
     
     img = refined.images[0]
