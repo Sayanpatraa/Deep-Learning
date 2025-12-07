@@ -259,12 +259,6 @@ def main():
                     # Realistic generator settings
                     st.markdown("**Realistic Generation Settings**")
                     
-                    environment = st.text_input(
-                        "Environment/Scene",
-                        value="a park with soft natural lighting",
-                        placeholder="e.g., a snowy forest, a sunny beach",
-                    )
-                    
                     col_a, col_b = st.columns(2)
                     with col_a:
                         height = st.number_input("Height", value=1024, step=64, min_value=512, max_value=1024)
@@ -276,12 +270,11 @@ def main():
                     guidance = st.slider("Guidance Scale", min_value=1.0, max_value=10.0, value=5.5, step=0.5)
                     
                     use_seed = st.checkbox("Use fixed seed")
-                    seed = 1234  # default
+                    seed = None
                     if use_seed:
                         seed = st.number_input("Seed", value=1234, min_value=0, max_value=2**32-1)
                 else:
                     # Stylized generator settings
-                    environment = None
                     steps_base = None
                     steps_refiner = None
                     
@@ -324,7 +317,7 @@ def main():
                             # Use realistic generator
                             generated_image = generator.generate(
                                 breed=selected_breed,
-                                seed=seed if use_seed else 1234,
+                                seed=seed,
                                 steps_base=steps_base,
                                 steps_refiner=steps_refiner,
                                 scale=guidance,
