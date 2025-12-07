@@ -2306,7 +2306,12 @@ class RealLifeDogSDXL:
         print(f"[DEBUG] Using {len(self.base.scheduler.sigmas)} sigmas, {total_steps} steps.")
 
         # -------- LONG PROMPT CHUNKING --------
-        prompt_embeds, negative_embeds = self.base.encode_prompt(
+        (
+            prompt_embeds,
+            negative_embeds,
+            pooled_prompt_embeds,
+            negative_pooled_prompt_embeds,
+        ) = self.base.encode_prompt(
             prompt=prompt,
             device=self.device,
             num_images_per_prompt=1,
@@ -2319,6 +2324,8 @@ class RealLifeDogSDXL:
         base_out = self.base(
             prompt_embeds=prompt_embeds,
             negative_prompt_embeds=negative_embeds,
+            pooled_prompt_embeds=pooled_prompt_embeds,
+            negative_pooled_prompt_embeds=negative_pooled_prompt_embeds,
             height=height,
             width=width,
             num_inference_steps=total_steps,
