@@ -2165,7 +2165,7 @@ BREED_ANATOMY: Dict[str, Dict[str, str]] = {
         "ears": "medium, triangular, erect ears with mobile carriage",
         "gait": "free, elastic, ground-covering trot reminiscent of wild canids",
         "size": "medium Italian working breed developed from wolf-dog crosses",
-    }
+    },
 
 
 
@@ -2268,15 +2268,15 @@ class RealLifeDogSDXL:
         )
 
     def generate(
-        self,
-        breed: str = "siberian husky",
-        seed: int = None,
-        steps_base: int = 28,
-        steps_refiner: int = 20,
-        scale: float = 5.5,
-        width: int = 1024,
-        height: int = 1024,
-        ) -> Image.Image:
+            self,
+            breed: str = "siberian husky",
+            seed: int = None,
+            steps_base: int = 28,
+            steps_refiner: int = 20,
+            scale: float = 5.5,
+            width: int = 1024,
+            height: int = 1024,
+    ) -> Image.Image:
 
         width, height = snap(width), snap(height)
         prompt = self.build_prompt(breed)
@@ -2285,7 +2285,7 @@ class RealLifeDogSDXL:
 
         # -------- RANDOM SEED --------
         if seed is None:
-            seed = torch.randint(0, 2**31 - 1, (1,)).item()
+            seed = torch.randint(0, 2 ** 31 - 1, (1,)).item()
         print(f"[SEED] {seed}")
         g = torch.Generator(self.device).manual_seed(seed)
 
@@ -2293,10 +2293,8 @@ class RealLifeDogSDXL:
         total_steps = steps_base + steps_refiner
         split = steps_base / float(total_steps)
 
-        # Reset scheduler
         self.base.scheduler.set_timesteps(total_steps)
 
-        # Universal sigma safety
         safe_max = len(self.base.scheduler.sigmas) - 1
         if total_steps > safe_max:
             print(f"[WARN] Clamping steps {total_steps} → {safe_max}")
@@ -2306,12 +2304,7 @@ class RealLifeDogSDXL:
         print(f"[DEBUG] Using {len(self.base.scheduler.sigmas)} sigmas, {total_steps} steps.")
 
         # -------- LONG PROMPT CHUNKING --------
-        (
-            prompt_embeds,
-            negative_embeds,
-            pooled_prompt_embeds,
-            negative_pooled_prompt_embeds,
-        ) = self.base.encode_prompt(
+        enc = self.base.encode_prompt(
             prompt=prompt,
             device=self.device,
             num_images_per_prompt=1,
@@ -2319,27 +2312,42 @@ class RealLifeDogSDXL:
             negative_prompt=NEG,
         )
 
+        # diffusers older: returns 1 value
+        # diffusers new: returns 2 values
+        if isinstance(enc, tuple) and len(enc) == 2:
+            prompt_embeds, negative_embeds = enc
+        else:
+            prompt_embeds = enc
+            negative_embeds = None
 
-        # -------- BASE PASS --------
-        base_out = self.base(
-            prompt_embeds=prompt_embeds,
-            negative_prompt_embeds=negative_embeds,
-            pooled_prompt_embeds=pooled_prompt_embeds,
-            negative_pooled_prompt_embeds=negative_pooled_prompt_embeds,
-            height=height,
-            width=width,
-            num_inference_steps=total_steps,
-            guidance_scale=scale,
-            generator=g,
-            denoising_end=split,
-            output_type="latent",
-        )
+        if negative_embeds is None:
+            base_out = self.base(
+                prompt_embeds=prompt_embeds,
+                height=height,
+                width=width,
+                num_inference_steps=total_steps,
+                guidance_scale=scale,
+                generator=g,
+                denoising_end=split,
+                output_type="latent",
+            )
+        else:
+            base_out = self.base(
+                prompt_embeds=prompt_embeds,
+                negative_prompt_embeds=negative_embeds,
+                height=height,
+                width=width,
+                num_inference_steps=total_steps,
+                guidance_scale=scale,
+                generator=g,
+                denoising_end=split,
+                output_type="latent",
+            )
 
         latents = base_out.images
 
-        # -------- REFINER PASS --------
         refined = self.refiner(
-            prompt=prompt,                     
+            prompt=prompt,
             negative_prompt=NEG,
             image=latents,
             num_inference_steps=total_steps,
@@ -2350,7 +2358,6 @@ class RealLifeDogSDXL:
 
         img = refined.images[0]
 
-        # -------- REALISM PASSES --------
         img = tone(img)
         img = microfur(img)
         img = real_sensor_noise(img)
