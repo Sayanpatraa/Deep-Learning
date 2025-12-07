@@ -2276,7 +2276,7 @@ class RealLifeDogSDXL:
         scale: float = 5.5,
         width: int = 1024,
         height: int = 1024,
-     ) -> Image.Image:
+        ) -> Image.Image:
 
         width, height = snap(width), snap(height)
         prompt = self.build_prompt(breed)
