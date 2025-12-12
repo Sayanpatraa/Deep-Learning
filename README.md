@@ -1,2 +1,2 @@
 # Deep-Learning
-Diffusion Models
+Diffusion Models , Resnet50 implementation
